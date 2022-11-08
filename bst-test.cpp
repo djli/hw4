@@ -23,8 +23,12 @@ int main(int argc, char *argv[])
     else {
         cout << "Did not find b" << endl;
     }
+		cout << "Empty: " << bt.empty() << endl;
     cout << "Erasing b" << endl;
     bt.remove('b');
+    cout << "Erasing a" << endl;
+    bt.remove('a');
+    cout << "Empty: " << bt.empty() << endl;
 
     // AVL Tree Tests
     AVLTree<char,int> at;
