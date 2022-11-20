@@ -383,9 +383,7 @@ template<typename Key, typename Value>
 BinarySearchTree<Key, Value>::~BinarySearchTree()
 {
     // TODO
-	while(!empty()){
-		remove(root_->getKey());
-	}
+	clear();
 }
 
 /**
@@ -476,6 +474,7 @@ void BinarySearchTree<Key, Value>::insert(const std::pair<const Key, Value> &key
     Node<Key, Value>* newNode = internalFind(keyValuePair.first);
     if(newNode != NULL){
         newNode->setValue(keyValuePair.second);
+				return;
     }
 
 		newNode = root_;
@@ -506,118 +505,106 @@ void BinarySearchTree<Key, Value>::insert(const std::pair<const Key, Value> &key
 template<typename Key, typename Value>
 void BinarySearchTree<Key, Value>::remove(const Key& key)
 {
-    // TODO
-    Node<Key, Value>* temp = internalFind(key);
-    if (temp == NULL){
-        return;
-    }
+	// TODO
+	Node<Key, Value>* temp = internalFind(key);
+	if (temp == NULL){
+			return;
+	}
 
-		//delete node with two children
-    if (temp->getLeft() != NULL && temp->getRight() != NULL){
-        Node<Key, Value>* tempPred = predecessor(temp);
-        nodeSwap(temp, tempPred);
-        Node<Key,Value>* rmParent = tempPred->getParent();
-        Node<Key,Value>* rmLeft = tempPred->getLeft();
-        Node<Key,Value>* rmRight = tempPred->getRight();
+//2 KIDS
+	if(temp->getLeft() != NULL && temp->getRight() != NULL){
+		Node<Key, Value>* tempPred = predecessor(temp);
+		nodeSwap(temp, tempPred);
+		Node<Key,Value>* rmParent = temp->getParent();
+		Node<Key,Value>* rmLeft = temp->getLeft();
+		Node<Key,Value>* rmRight = temp->getRight();
 
-				//if remove node has right child
-        if(rmRight != NULL){
-            rmRight->setParent(rmParent);
-						if(rmParent != NULL){
-	            if(rmRight->getKey() < rmParent->getKey()){
-                rmParent->setLeft(rmRight);
-            	}
-            	else{
-                rmParent->setRight(rmRight);
-            	}						
-						}
-        }
-
-				//if remove node has left child
-        else if(rmLeft != NULL && rmParent != NULL){
-            rmLeft->setParent(rmParent);
-						if(rmParent != NULL){
-							if(rmLeft->getKey() < rmParent->getKey()){
-									rmParent->setLeft(rmLeft);
-							}
-							else{
-									rmParent->setRight(rmLeft);
-							}
-						}
-        }
-
-				//if remove node is alone forever
-        else if(rmParent != NULL){
-            if(tempPred->getKey() < rmParent->getKey()){
-                rmParent->setLeft(NULL);
-            }
-            else{
-                rmParent->setRight(NULL);
-            }
-        }
-        if(tempPred != NULL){
-					delete tempPred;
-				}
-				if(temp->getParent() == NULL){
-					root_ = temp;
-				}
-        return;     
-    }
-
-		//if remove node has left child and parent
-    else if(temp->getLeft() != NULL && temp->getParent() != NULL){
-        temp->getLeft()->setParent(temp->getParent());
-        if(temp->getLeft()->getKey() < temp->getParent()->getKey()){
-            temp->getParent()->setLeft(temp->getLeft());
-        }
-        else{
-            temp->getParent()->setRight(temp->getLeft());
-        }
-        delete temp;
-    }
-
-		//if remove node has right child and parent
-    else if(temp->getRight() != NULL && temp->getParent() != NULL){
-        temp->getRight()->setParent(temp->getParent());
-        if(temp->getRight()->getKey() < temp->getParent()->getKey()){
-            temp->getParent()->setLeft(temp->getRight());
-        }
-        else{
-            temp->getParent()->setRight(temp->getRight());
-        }
-        delete temp;
-    }
-
-		//if remove node is alone forever but has parent
-    else if(temp->getRight() == NULL && temp->getLeft() == NULL && temp->getParent() != NULL){
-        if(temp->getParent()->getLeft() == temp){
-            temp->getParent()->setLeft(NULL);
-        }
-        else{
-            temp->getParent()->setRight(NULL);
-        }
-        delete temp;
-    }
-
-		//if remove node is root with left child
-		else if(temp->getLeft() != NULL && temp->getParent() == NULL){
-				temp->getLeft()->setParent(NULL);
-				root_ = temp->getLeft();
-				delete temp;
+		//root check
+		if(tempPred->getParent() == NULL){
+			root_ = tempPred;
 		}
 
-		//if remove node is root with right child
-		else if(temp->getRight() != NULL && temp->getParent() == NULL){
-				temp->getRight()->setParent(NULL);
-				root_ = temp->getRight();
-				delete temp;
+		//leaf check for node to be removed
+		if(rmLeft == NULL && rmRight == NULL){
+			if(rmParent->getKey() < tempPred->getKey()){
+				rmParent->setRight(NULL);
+			}
+			else{
+				rmParent->setLeft(NULL);
+			}
 		}
+		//check 1 kid
+		else if(rmLeft != NULL && rmRight == NULL){
+			rmLeft->setParent(rmParent);
+			if(rmParent->getKey() < tempPred->getKey()){
+				rmParent->setRight(rmLeft);
+			}
+			else{
+				rmParent->setLeft(rmLeft);
+			}
+		}
+		else if(rmRight != NULL && rmLeft == NULL){
+			rmRight->setParent(rmParent);
+			if(rmParent->getKey() < tempPred->getKey()){
+				rmParent->setRight(rmRight);
+			}
+			else{
+				rmParent->setLeft(rmRight);
+			}
+		}
+		delete temp;
+	}
+	//1 kid
+	else if(temp->getLeft() != NULL && temp->getRight() == NULL){
+		Node<Key,Value>* rmLeft = temp->getLeft();
+		Node<Key,Value>* rmParent = temp->getParent();
 
-		//if remove node is root with no child
+		//root check
+		if(temp == root_){
+			root_ = rmLeft;
+		}
+		else if(rmParent->getKey() < temp->getKey()){
+			rmParent->setRight(rmLeft);
+		}
 		else{
-			root_ = NULL;
-			delete temp;
+			rmParent->setLeft(rmLeft);
 		}
+		rmLeft->setParent(rmParent);
+		delete temp;
+	}
+	else if(temp->getRight() != NULL && temp->getLeft() == NULL){
+		Node<Key,Value>* rmRight = temp->getRight();
+		Node<Key,Value>* rmParent = temp->getParent();
+
+		//root check
+		if(temp == root_){
+			root_ = rmRight;
+		}
+		else if(rmParent->getKey() < temp->getKey()){
+			rmParent->setRight(rmRight);
+		}
+		else{
+			rmParent->setLeft(rmRight);
+		}
+		rmRight->setParent(rmParent);
+		delete temp;
+	}
+	//no kids
+	else if(temp->getRight() == NULL && temp->getLeft() == NULL && temp->getParent() != NULL){
+		Node<Key,Value>* rmParent = temp->getParent();
+		if(rmParent->getKey() < temp->getKey()){
+			rmParent->setRight(NULL);
+		}
+		else{
+			rmParent->setLeft(NULL);
+		}
+		delete temp;
+	}
+	//root no kids
+	else if(temp == root_){
+		root_ = NULL;
+		delete temp;
+	}
 }
 
 
@@ -685,6 +672,7 @@ void BinarySearchTree<Key, Value>::clear()
 		while(!empty()){
 			remove(root_->getKey());
 		}
+		root_ = NULL;
 }
 
 
